@@ -84,22 +84,4 @@
 | QA003   | Implement API documentation artifacts | Hoan thien Swagger annotation va Postman collection cho toan bo API.       |
 
 ---
-
-## Tong hop theo Module
-
-| Module                  | Task IDs    | So task |
-| ----------------------- | ----------- | ------- |
-| SETUP                   | BE001-BE003 | 3       |
-| DATABASE                | DB001-DB006 | 6       |
-| AUTHENTICATION & USER   | BE004-BE009 | 6       |
-| EMPLOYER / HR PORTAL    | BE010-BE015 | 6       |
-| CANDIDATE PORTAL        | BE016-BE021 | 6       |
-| AI SERVICE              | AI001-AI005 | 5       |
-| NOTIFICATION & REALTIME | BE022-BE024 | 3       |
-| DASHBOARD & REPORTING   | BE025-BE027 | 3       |
-| QA & DOCUMENTATION      | QA001-QA003 | 3       |
-| Total                   |             | 41      |
-
----
-
 _Tai lieu cap nhat: 2026-03-12 | SmartHire Backend Team_
