@@ -2,36 +2,6 @@
 
 > Project: SmartHire Backend
 > Stack: Spring Boot 4, Java 25, MySQL, JWT, WebSocket, Ollama
-
-Nguyen tac tach task cho Jira:
-
-- Chi ghi task chinh, co deliverable ro rang.
-- Khong tach cac implementation detail nhu `BaseEntity`, `JwtUtil`, `CustomUserDetails`, `SecurityConfig` thanh task rieng.
-- Cac phan ky thuat phu se duoc gom vao `Short description` cua task chinh.
-
----
-
-## MODULE: SETUP
-
-| Task ID | Task                         | Short description                                                                          |
-| ------- | ---------------------------- | ------------------------------------------------------------------------------------------ |
-| BE001   | Setup project infrastructure | Khoi tao branch strategy, docker compose cho MySQL/MinIO, cau hinh environment `dev/prod`. |
-| BE002   | Setup API documentation      | Tich hop Swagger/OpenAPI va cau hinh JWT Bearer auth de test API.                          |
-| BE003   | Setup database migration     | Tich hop Flyway va thong nhat convention migration cho ca team.                            |
-
----
-
-## MODULE: DATABASE
-
-| Task ID | Task                       | Short description                                                                             |
-| ------- | -------------------------- | --------------------------------------------------------------------------------------------- |
-| DB001   | Create core auth schema    | Tao bang `users`, `refresh_tokens` va cac index can thiet cho authentication.                 |
-| DB002   | Create candidate schema    | Tao cac bang profile ung vien, hoc van, kinh nghiem, ky nang, du an, CV upload va CV builder. |
-| DB003   | Create employer schema     | Tao cac bang company, job, job skills, application, stage history va interview room.          |
-| DB004   | Create AI schema           | Tao cac bang luu ket qua parse CV, matching, review CV va virtual interview.                  |
-| DB005   | Create notification schema | Tao bang notifications phuc vu in-app notification va realtime.                               |
-| DB006   | Add indexes and seed data  | Tao index toi uu va du lieu mau cho moi truong dev.                                           |
-
 ---
 
 ## MODULE: AUTHENTICATION & USER
