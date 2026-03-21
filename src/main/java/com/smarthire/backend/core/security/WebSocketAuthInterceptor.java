@@ -1,5 +1,6 @@
 package com.smarthire.backend.core.security;
 
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -11,6 +12,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
 
 @Component
 @RequiredArgsConstructor
@@ -31,15 +33,24 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 String token = authHeader.substring(7);
                 try {
                     if (jwtUtil.isTokenValid(token)) {
-                        String email = jwtUtil.getEmailFromToken(token);
+                        Claims claims = jwtUtil.parseToken(token);
+                        String email = claims.getSubject();
+                        Long userId = claims.get("userId", Long.class);
                         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
+                        // Tạo principal với name = userId.toString()
+                        // để khớp với convertAndSendToUser(userId.toString(), ...)
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(
-                                        userDetails, null, userDetails.getAuthorities());
+                                        userDetails, null, userDetails.getAuthorities()) {
+                                    @Override
+                                    public String getName() {
+                                        return userId.toString();
+                                    }
+                                };
 
                         accessor.setUser(authentication);
-                        log.info("WebSocket STOMP connected: {}", email);
+                        log.info("WebSocket STOMP connected: {} (userId={})", email, userId);
                     } else {
                         log.warn("WebSocket STOMP connect with invalid/expired token");
                     }
