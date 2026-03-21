@@ -11,6 +11,8 @@ import com.smarthire.backend.features.application.entity.ApplicationStageHistory
 import com.smarthire.backend.features.application.repository.ApplicationRepository;
 import com.smarthire.backend.features.auth.entity.User;
 import com.smarthire.backend.features.candidate.repository.CandidateProfileRepository;
+import com.smarthire.backend.features.notification.dto.CreateNotificationRequest;
+import com.smarthire.backend.features.notification.service.NotificationService;
 import com.smarthire.backend.features.notification.service.RealtimeEventService;
 import com.smarthire.backend.shared.enums.ApplicationStage;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final RealtimeEventService realtimeEventService;
     private final CandidateProfileRepository candidateProfileRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -80,6 +83,19 @@ public class ApplicationServiceImpl implements ApplicationService {
         // ── Phát realtime event qua WebSocket ──
         Long candidateUserId = lookupCandidateUserId(saved.getCandidateProfileId());
         realtimeEventService.publishStageChanged(saved, oldStage, newStage, currentUser.getId(), candidateUserId);
+
+        // ── Tạo in-app notification cho candidate ──
+        if (candidateUserId != null) {
+            notificationService.createNotification(CreateNotificationRequest.builder()
+                    .userId(candidateUserId)
+                    .type("APPLICATION_STAGE_CHANGED")
+                    .title("Cập nhật trạng thái ứng tuyển")
+                    .content("Đơn ứng tuyển \"" + saved.getJob().getTitle() + "\" đã chuyển từ "
+                            + oldStage.name() + " sang " + newStage.name())
+                    .referenceType("APPLICATION")
+                    .referenceId(saved.getId())
+                    .build());
+        }
 
         return toResponse(saved);
     }
