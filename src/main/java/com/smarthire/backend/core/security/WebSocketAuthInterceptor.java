@@ -13,7 +13,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -38,7 +37,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                         Long userId = claims.get("userId", Long.class);
                         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                        // Tạo principal với name = userId.toString()
+                        // Principal name = userId.toString()
                         // để khớp với convertAndSendToUser(userId.toString(), ...)
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(
