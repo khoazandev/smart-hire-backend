@@ -10,6 +10,6 @@ import lombok.Getter;
 public class StageFunnelItem {
 
     private String stage;
-    private Long count;
-    private Double percentage;
+    private long count;
+    private double percentage;
 }

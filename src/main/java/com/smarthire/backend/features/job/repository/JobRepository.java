@@ -22,4 +22,5 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
     long countByCreatedById(Long userId);
 
     long countByCreatedByIdAndStatus(Long userId, JobStatus status);
+    long countByStatus(JobStatus status);
 }
