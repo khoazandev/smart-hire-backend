@@ -1,18 +1,16 @@
 package com.smarthire.backend.features.application.entity;
 
+import com.smarthire.backend.features.candidate.entity.CandidateProfile;
+import com.smarthire.backend.features.candidate.entity.CvFile;
 import com.smarthire.backend.features.job.entity.Job;
 import com.smarthire.backend.shared.enums.ApplicationStage;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "applications", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"job_id", "candidate_profile_id"})
-})
+@Table(name = "applications")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,11 +26,13 @@ public class Application {
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
-    @Column(name = "candidate_profile_id", nullable = false)
-    private Long candidateProfileId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "candidate_profile_id", nullable = false)
+    private CandidateProfile candidateProfile;
 
-    @Column(name = "cv_file_id", nullable = false)
-    private Long cvFileId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cv_file_id", nullable = false)
+    private CvFile cvFile;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -44,10 +44,6 @@ public class Application {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ApplicationStageHistory> stageHistory = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

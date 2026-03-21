@@ -1,117 +1,81 @@
 package com.smarthire.backend.features.application.service;
 
 import com.smarthire.backend.core.exception.BadRequestException;
-import com.smarthire.backend.core.exception.ForbiddenException;
+import com.smarthire.backend.core.exception.ConflictException;
 import com.smarthire.backend.core.exception.ResourceNotFoundException;
-import com.smarthire.backend.core.security.SecurityUtils;
 import com.smarthire.backend.features.application.dto.ApplicationResponse;
-import com.smarthire.backend.features.application.dto.ChangeStageRequest;
-import com.smarthire.backend.features.application.dto.StageHistoryDto;
+import com.smarthire.backend.features.application.dto.ApplyJobRequest;
 import com.smarthire.backend.features.application.entity.Application;
 import com.smarthire.backend.features.application.entity.ApplicationStageHistory;
 import com.smarthire.backend.features.application.repository.ApplicationRepository;
-import com.smarthire.backend.features.auth.entity.User;
+import com.smarthire.backend.features.application.repository.ApplicationStageHistoryRepository;
+import com.smarthire.backend.features.candidate.entity.CandidateProfile;
+import com.smarthire.backend.features.candidate.entity.CvFile;
+import com.smarthire.backend.features.candidate.repository.CandidateProfileRepository;
+import com.smarthire.backend.features.candidate.repository.CvFileRepository;
+import com.smarthire.backend.features.job.entity.Job;
+import com.smarthire.backend.features.job.repository.JobRepository;
 import com.smarthire.backend.shared.enums.ApplicationStage;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class ApplicationServiceImpl implements ApplicationService {
 
     private final ApplicationRepository applicationRepository;
-
-    @Override
-    @Transactional(readOnly = true)
-    public ApplicationResponse getApplicationById(Long id) {
-        Application app = findOrThrow(id);
-        return toResponse(app);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ApplicationResponse> getApplicationsByJob(Long jobId, String stage) {
-        List<Application> apps;
-        if (stage != null && !stage.isBlank()) {
-            ApplicationStage stageEnum = parseStage(stage);
-            apps = applicationRepository.findByJobIdAndStageOrderByAppliedAtDesc(jobId, stageEnum);
-        } else {
-            apps = applicationRepository.findByJobIdOrderByAppliedAtDesc(jobId);
-        }
-        return apps.stream().map(this::toResponse).toList();
-    }
+    private final ApplicationStageHistoryRepository historyRepository;
+    private final JobRepository jobRepository;
+    private final CandidateProfileRepository candidateProfileRepository;
+    private final CvFileRepository cvFileRepository;
 
     @Override
     @Transactional
-    public ApplicationResponse changeStage(Long applicationId, ChangeStageRequest request) {
-        User currentUser = SecurityUtils.getCurrentUser();
-        Application app = findOrThrow(applicationId);
+    public ApplicationResponse applyToJob(Long userId, ApplyJobRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Candidate Profile not found"));
 
-        ApplicationStage newStage = parseStage(request.getStage());
-        ApplicationStage oldStage = app.getStage();
+        Job job = jobRepository.findById(request.getJobId())
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + request.getJobId()));
 
-        if (oldStage == newStage) {
-            throw new BadRequestException("Application is already in stage: " + newStage);
+        if (applicationRepository.existsByJobIdAndCandidateProfileId(job.getId(), profile.getId())) {
+            throw new ConflictException("You have already applied for this job");
         }
 
-        // Record history
-        ApplicationStageHistory history = ApplicationStageHistory.builder()
-                .application(app)
-                .fromStage(oldStage)
-                .toStage(newStage)
-                .changedBy(currentUser)
-                .note(request.getNote())
+        CvFile cvFile = cvFileRepository.findById(request.getCvFileId())
+                .orElseThrow(() -> new ResourceNotFoundException("CV File not found with id: " + request.getCvFileId()));
+
+        if (!cvFile.getCandidateProfile().getId().equals(profile.getId())) {
+            throw new BadRequestException("CV File does not belong to the current candidate");
+        }
+
+        Application application = Application.builder()
+                .job(job)
+                .candidateProfile(profile)
+                .cvFile(cvFile)
+                .stage(ApplicationStage.APPLIED)
                 .build();
-        app.getStageHistory().add(history);
-        app.setStage(newStage);
+        
+        application = applicationRepository.save(application);
 
-        Application saved = applicationRepository.save(app);
-        log.info("Application {} stage changed: {} -> {} by {}", applicationId, oldStage, newStage, currentUser.getEmail());
-        return toResponse(saved);
-    }
-
-    // ── Helpers ──
-
-    private Application findOrThrow(Long id) {
-        return applicationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + id));
-    }
-
-    private ApplicationStage parseStage(String stage) {
-        try {
-            return ApplicationStage.valueOf(stage.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid stage. Must be: APPLIED, SCREENING, INTERVIEW, OFFER, HIRED, REJECTED");
-        }
-    }
-
-    private ApplicationResponse toResponse(Application app) {
-        List<StageHistoryDto> historyDtos = app.getStageHistory().stream()
-                .map(h -> StageHistoryDto.builder()
-                        .id(h.getId())
-                        .fromStage(h.getFromStage())
-                        .toStage(h.getToStage())
-                        .changedBy(h.getChangedBy().getId())
-                        .note(h.getNote())
-                        .createdAt(h.getCreatedAt())
-                        .build())
-                .toList();
+        ApplicationStageHistory history = ApplicationStageHistory.builder()
+                .application(application)
+                .fromStage(null)
+                .toStage(ApplicationStage.APPLIED)
+                .changedBy(profile.getUser())
+                .note("Candidate applied successfully")
+                .build();
+                
+        historyRepository.save(history);
 
         return ApplicationResponse.builder()
-                .id(app.getId())
-                .jobId(app.getJob().getId())
-                .jobTitle(app.getJob().getTitle())
-                .candidateProfileId(app.getCandidateProfileId())
-                .cvFileId(app.getCvFileId())
-                .stage(app.getStage())
-                .appliedAt(app.getAppliedAt())
-                .updatedAt(app.getUpdatedAt())
-                .stageHistory(historyDtos)
+                .id(application.getId())
+                .jobId(job.getId())
+                .candidateProfileId(profile.getId())
+                .cvFileId(cvFile.getId())
+                .stage(application.getStage())
+                .appliedAt(application.getAppliedAt())
                 .build();
     }
 }

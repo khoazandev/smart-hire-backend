@@ -1,43 +1,31 @@
 package com.smarthire.backend.features.application.controller;
 
+import com.smarthire.backend.core.security.SecurityUtils;
 import com.smarthire.backend.features.application.dto.ApplicationResponse;
-import com.smarthire.backend.features.application.dto.ChangeStageRequest;
+import com.smarthire.backend.features.application.dto.ApplyJobRequest;
 import com.smarthire.backend.features.application.service.ApplicationService;
-import com.smarthire.backend.shared.constants.ApiPaths;
-import com.smarthire.backend.shared.dto.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(ApiPaths.APPLICATIONS)
+@RequestMapping("/api/v1/applications")
 @RequiredArgsConstructor
+@Tag(name = "Applications", description = "APIs for Job Applications")
 public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ApplicationResponse>> getApplicationById(@PathVariable Long id) {
-        ApplicationResponse response = applicationService.getApplicationById(id);
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    @GetMapping("/job/{jobId}")
-    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> getApplicationsByJob(
-            @PathVariable Long jobId,
-            @RequestParam(required = false) String stage) {
-        List<ApplicationResponse> responses = applicationService.getApplicationsByJob(jobId, stage);
-        return ResponseEntity.ok(ApiResponse.success(responses));
-    }
-
-    @PatchMapping("/{id}/stage")
-    public ResponseEntity<ApiResponse<ApplicationResponse>> changeStage(
-            @PathVariable Long id,
-            @Valid @RequestBody ChangeStageRequest request) {
-        ApplicationResponse response = applicationService.changeStage(id, request);
-        return ResponseEntity.ok(ApiResponse.success("Stage updated successfully", response));
+    @PostMapping("/apply")
+    @Operation(summary = "Apply to a Job", description = "Candidate submits an application utilizing a specific CV")
+    public ResponseEntity<ApplicationResponse> applyToJob(@Valid @RequestBody ApplyJobRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(applicationService.applyToJob(userId, request));
     }
 }

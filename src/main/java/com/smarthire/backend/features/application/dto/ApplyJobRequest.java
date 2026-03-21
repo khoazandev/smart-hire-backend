@@ -1,22 +1,19 @@
 package com.smarthire.backend.features.application.dto;
 
-import com.smarthire.backend.shared.enums.ApplicationStage;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApplicationResponse {
-    private Long id;
+public class ApplyJobRequest {
+    @NotNull(message = "Job ID is required")
     private Long jobId;
-    private Long candidateProfileId;
+
+    @NotNull(message = "CV File ID is required")
     private Long cvFileId;
-    private ApplicationStage stage;
-    private LocalDateTime appliedAt;
 }
