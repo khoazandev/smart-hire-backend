@@ -1,0 +1,15 @@
+﻿  develop                                                                   d213d9a [behind 25] Merge pull request #13 from tuananhit1612/feature/BE018-implement-cv-upload-versioning-api
+  feature/BE019-implement-cv-builder-api                                    4083bbb fix(security): prevent potential NPE and fix isAccountNonLocked logic in CustomUserDetails
+  feature/BE020-implement-candidate-apply-job-api                           479ae46 chore: update java version to 23
+  feature/BE021-implement-candidate-application-tracking-api                8c0e3c7 chore: update java version to 23
+  main                                                                      7a95ac3 Initial commit
+  temp-conflict                                                             479ae46 chore: update java version to 23
+* test-conflict-dev                                                         3ec8441 [ahead 26] feat(application): resolve conflicts and integrate BE020 & BE021 features
+  remotes/origin/HEAD                                                       -> origin/main
+  remotes/origin/develop                                                    1a597f3 Merge pull request #24 from tuananhit1612/feature/ADV001-integrate-email-forgot-password
+  remotes/origin/feature/BE019-implement-cv-builder-api                     4083bbb fix(security): prevent potential NPE and fix isAccountNonLocked logic in CustomUserDetails
+  remotes/origin/feature/BE020-implement-candidate-apply-job-api            479ae46 chore: update java version to 23
+  remotes/origin/feature/BE021-implement-candidate-application-tracking-api 8c0e3c7 chore: update java version to 23
+  remotes/origin/feature/BE022-implement-realtime-event-system              683416c feat(BE022): implement realtime event system with WebSocket STOMP
+  remotes/origin/main                                                       7a95ac3 Initial commit
+  remotes/origin/test-conflict-dev                                          3ec8441 feat(application): resolve conflicts and integrate BE020 & BE021 features

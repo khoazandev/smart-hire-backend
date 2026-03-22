@@ -1,11 +1,9 @@
 package com.smarthire.backend.features.application.controller;
 
 import com.smarthire.backend.core.security.SecurityUtils;
-import com.smarthire.backend.features.application.dto.ApplicationDetailResponse;
-import com.smarthire.backend.features.application.dto.ApplicationResponse;
-import com.smarthire.backend.features.application.dto.ApplicationTrackingResponse;
-import com.smarthire.backend.features.application.dto.ApplyJobRequest;
+import com.smarthire.backend.features.application.dto.*;
 import com.smarthire.backend.features.application.service.ApplicationService;
+import com.smarthire.backend.shared.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -13,12 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/applications")
@@ -27,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
+
+    // ── Candidate APIs (BE020 & BE021) ──
 
     @PostMapping("/apply")
     @Operation(summary = "Apply to a Job", description = "Candidate submits an application utilizing a specific CV")
@@ -47,5 +44,26 @@ public class ApplicationController {
     public ResponseEntity<ApplicationDetailResponse> getApplicationDetail(@PathVariable("id") Long applicationId) {
         Long userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(applicationService.getApplicationDetail(userId, applicationId));
+    }
+
+    // ── Management APIs (develop) ──
+
+    @GetMapping("/job/{jobId}")
+    @Operation(summary = "Get Applications by Job", description = "HR/Admin retrieves all applications for a specific job, optionally filtered by stage")
+    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> getApplicationsByJob(
+            @PathVariable Long jobId,
+            @RequestParam(required = false) String stage) {
+        List<ApplicationResponse> response = applicationService.getApplicationsByJob(jobId, stage);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PatchMapping("/{id}/stage")
+    @Operation(summary = "Change Application Stage", description = "HR/Admin updates the stage of an application and records history")
+    public ResponseEntity<ApiResponse<ApplicationResponse>> changeStage(
+            @PathVariable Long id,
+            @Valid @RequestBody ChangeStageRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        ApplicationResponse response = applicationService.changeStage(id, userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Application stage updated successfully", response));
     }
 }

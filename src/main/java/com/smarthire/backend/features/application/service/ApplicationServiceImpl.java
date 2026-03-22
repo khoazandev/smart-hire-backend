@@ -14,6 +14,8 @@ import com.smarthire.backend.features.candidate.repository.CandidateProfileRepos
 import com.smarthire.backend.features.candidate.repository.CvFileRepository;
 import com.smarthire.backend.features.job.entity.Job;
 import com.smarthire.backend.features.job.repository.JobRepository;
+import com.smarthire.backend.features.auth.entity.User;
+import com.smarthire.backend.features.auth.repository.UserRepository;
 import com.smarthire.backend.features.notification.dto.CreateNotificationRequest;
 import com.smarthire.backend.features.notification.service.NotificationService;
 import com.smarthire.backend.features.notification.service.RealtimeEventService;
@@ -41,6 +43,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final EmailService emailService;
     private final RealtimeEventService realtimeEventService;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     // ── Management features (develop) ──
 
@@ -67,9 +70,12 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public ApplicationResponse changeStage(Long applicationId, ChangeStageRequest request) {
+    public ApplicationResponse changeStage(Long applicationId, Long userId, ChangeStageRequest request) {
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        User actor = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
         ApplicationStage oldStage = application.getStage();
         ApplicationStage newStage = parseStage(request.getStage());
@@ -81,16 +87,17 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setStage(newStage);
         Application saved = applicationRepository.save(application);
 
-        // Save history (Combined with BE021's need for history tracking)
+        // Save history (Now with changedBy)
         ApplicationStageHistory history = ApplicationStageHistory.builder()
                 .application(saved)
                 .fromStage(oldStage)
                 .toStage(newStage)
+                .changedBy(actor)
                 .note(request.getNote())
                 .build();
         historyRepository.save(history);
 
-        log.info("Application {} stage changed: {} -> {}", applicationId, oldStage, newStage);
+        log.info("Application {} stage changed by {}: {} -> {}", applicationId, userId, oldStage, newStage);
 
         // Notifications (develop feature)
         sendStageNotification(saved, oldStage, newStage);
