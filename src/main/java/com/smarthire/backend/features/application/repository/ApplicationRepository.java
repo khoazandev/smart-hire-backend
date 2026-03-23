@@ -1,14 +1,25 @@
 package com.smarthire.backend.features.application.repository;
 
 import com.smarthire.backend.features.application.entity.Application;
+import com.smarthire.backend.shared.enums.ApplicationStage;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     boolean existsByJobIdAndCandidateProfileId(Long jobId, Long candidateProfileId);
+
+    Page<Application> findByCandidateProfileId(Long candidateProfileId, Pageable pageable);
+
+    List<Application> findByJobIdAndStageOrderByAppliedAtDesc(Long jobId, ApplicationStage stage);
+
+    List<Application> findByJobIdOrderByAppliedAtDesc(Long jobId);
 
     // ── Dashboard queries ──
 
