@@ -33,10 +33,25 @@ public class ApplicationController {
     }
 
     @GetMapping
-    @Operation(summary = "Get Candidate Applications", description = "Retrieves a paginated list of jobs the candidate has applied for")
+    @Operation(summary = "Get Candidate Applications (Paginated)", description = "Retrieves a paginated list of jobs the candidate has applied for")
     public ResponseEntity<Page<ApplicationTrackingResponse>> getCandidateApplications(Pageable pageable) {
         Long userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(applicationService.getCandidateApplications(userId, pageable));
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get My Applications (Flat List)", description = "Retrieves ALL applications for the current candidate as a flat list")
+    public ResponseEntity<List<ApplicationTrackingResponse>> getMyApplications() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(applicationService.getCandidateApplicationsList(userId));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Withdraw Application", description = "Candidate withdraws an application (deletes it)")
+    public ResponseEntity<Void> withdrawApplication(@PathVariable("id") Long applicationId) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        applicationService.withdrawApplication(userId, applicationId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")

@@ -10,7 +10,9 @@ public interface ApplicationService {
     // ── Candidate features (BE021 & BE020) ──
     ApplicationResponse applyToJob(Long userId, ApplyJobRequest request);
     Page<ApplicationTrackingResponse> getCandidateApplications(Long userId, Pageable pageable);
+    List<ApplicationTrackingResponse> getCandidateApplicationsList(Long userId);
     ApplicationDetailResponse getApplicationDetail(Long userId, Long applicationId);
+    void withdrawApplication(Long userId, Long applicationId);
 
     // ── Management features (develop) ──
     ApplicationResponse getApplicationById(Long id);

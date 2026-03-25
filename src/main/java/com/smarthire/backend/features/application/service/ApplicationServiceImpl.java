@@ -186,6 +186,43 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ApplicationTrackingResponse> getCandidateApplicationsList(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Candidate Profile not found"));
+
+        return applicationRepository.findByCandidateProfileIdOrderByAppliedAtDesc(profile.getId())
+                .stream()
+                .map(app -> ApplicationTrackingResponse.builder()
+                        .id(app.getId())
+                        .jobId(app.getJob().getId())
+                        .jobTitle(app.getJob().getTitle())
+                        .companyName(app.getJob().getCompany().getName())
+                        .currentStage(app.getStage())
+                        .appliedAt(app.getAppliedAt())
+                        .updatedAt(app.getUpdatedAt())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void withdrawApplication(Long userId, Long applicationId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Candidate Profile not found"));
+
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        if (!application.getCandidateProfile().getId().equals(profile.getId())) {
+            throw new BadRequestException("Not authorized to withdraw this application");
+        }
+
+        applicationRepository.delete(application);
+        log.info("Application {} withdrawn by user {}", applicationId, userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ApplicationDetailResponse getApplicationDetail(Long userId, Long applicationId) {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Candidate Profile not found"));
