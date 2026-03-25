@@ -17,6 +17,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     Page<Application> findByCandidateProfileId(Long candidateProfileId, Pageable pageable);
 
+    List<Application> findByCandidateProfileIdOrderByAppliedAtDesc(Long candidateProfileId);
+
     List<Application> findByJobIdAndStageOrderByAppliedAtDesc(Long jobId, ApplicationStage stage);
 
     List<Application> findByJobIdOrderByAppliedAtDesc(Long jobId);
