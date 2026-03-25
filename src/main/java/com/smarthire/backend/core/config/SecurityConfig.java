@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         // ── Public endpoints ──
-                        .requestMatchers("/api/health").permitAll()
+                        .requestMatchers("/api/v1/health", "/api/health").permitAll()
                         .requestMatchers(
                                 ApiPaths.AUTH + "/register",
                                 ApiPaths.AUTH + "/login",
@@ -56,6 +56,9 @@ public class SecurityConfig {
                                 ApiPaths.AUTH + "/forgot-password",
                                 ApiPaths.AUTH + "/reset-password")
                         .permitAll()
+
+                        // ── Public browsable content (no login required) ──
+                        .requestMatchers(HttpMethod.GET, ApiPaths.PUBLIC + "/**").permitAll()
 
                         // ── Swagger / OpenAPI ──
                         .requestMatchers(
@@ -70,9 +73,7 @@ public class SecurityConfig {
                         // ── WebSocket STOMP endpoint (auth at STOMP layer) ──
                         .requestMatchers("/ws/**").permitAll()
 
-                        // ── Public job listing (browsable without login) ──
-                        .requestMatchers(HttpMethod.GET, ApiPaths.JOBS + "/public", ApiPaths.JOBS + "/public/**")
-                        .permitAll()
+                        // ── Public company listing ──
                         .requestMatchers(HttpMethod.GET, ApiPaths.COMPANIES, ApiPaths.COMPANIES + "/**").permitAll()
 
                         // ── Admin-only endpoints ──

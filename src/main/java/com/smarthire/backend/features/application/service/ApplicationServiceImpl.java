@@ -3,6 +3,7 @@ package com.smarthire.backend.features.application.service;
 import com.smarthire.backend.core.exception.BadRequestException;
 import com.smarthire.backend.core.exception.ResourceNotFoundException;
 import com.smarthire.backend.core.security.SecurityUtils;
+import com.smarthire.backend.features.application.dto.ApplyRequest;
 import com.smarthire.backend.features.application.dto.ApplicationResponse;
 import com.smarthire.backend.features.application.dto.ChangeStageRequest;
 import com.smarthire.backend.features.application.dto.StageHistoryDto;
@@ -10,7 +11,10 @@ import com.smarthire.backend.features.application.entity.Application;
 import com.smarthire.backend.features.application.entity.ApplicationStageHistory;
 import com.smarthire.backend.features.application.repository.ApplicationRepository;
 import com.smarthire.backend.features.auth.entity.User;
+import com.smarthire.backend.features.candidate.entity.CandidateProfile;
 import com.smarthire.backend.features.candidate.repository.CandidateProfileRepository;
+import com.smarthire.backend.features.job.entity.Job;
+import com.smarthire.backend.features.job.repository.JobRepository;
 import com.smarthire.backend.features.notification.dto.CreateNotificationRequest;
 import com.smarthire.backend.features.notification.service.NotificationService;
 import com.smarthire.backend.features.notification.service.RealtimeEventService;
@@ -31,6 +35,89 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final RealtimeEventService realtimeEventService;
     private final CandidateProfileRepository candidateProfileRepository;
     private final NotificationService notificationService;
+    private final JobRepository jobRepository;
+
+    // ── Apply to a job ──
+
+    @Override
+    @Transactional
+    public ApplicationResponse apply(ApplyRequest request) {
+        User currentUser = SecurityUtils.getCurrentUser();
+
+        // 1. Lookup candidate profile
+        CandidateProfile profile = candidateProfileRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new BadRequestException(
+                        "Bạn cần tạo hồ sơ ứng viên trước khi ứng tuyển"));
+
+        // 2. Validate job exists
+        Job job = jobRepository.findById(request.getJobId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Job not found with id: " + request.getJobId()));
+
+        // 3. Check duplicate application
+        if (applicationRepository.existsByJobIdAndCandidateProfileId(
+                request.getJobId(), profile.getId())) {
+            throw new BadRequestException("Bạn đã ứng tuyển vào vị trí này rồi");
+        }
+
+        // 4. Create and save
+        Application application = Application.builder()
+                .job(job)
+                .candidateProfileId(profile.getId())
+                .cvFileId(request.getCvFileId())
+                .stage(ApplicationStage.APPLIED)
+                .build();
+
+        Application saved = applicationRepository.save(application);
+        log.info("User {} applied to job {} (application {})",
+                currentUser.getEmail(), request.getJobId(), saved.getId());
+
+        return toResponse(saved);
+    }
+
+    // ── Get my applications (candidate) ──
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ApplicationResponse> getMyApplications() {
+        User currentUser = SecurityUtils.getCurrentUser();
+
+        CandidateProfile profile = candidateProfileRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Candidate profile not found"));
+
+        List<Application> apps = applicationRepository
+                .findByCandidateProfileIdOrderByAppliedAtDesc(profile.getId());
+        return apps.stream().map(this::toResponse).toList();
+    }
+
+    // ── Withdraw application ──
+
+    @Override
+    @Transactional
+    public void withdrawApplication(Long applicationId) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        Application app = findOrThrow(applicationId);
+
+        // Verify ownership
+        CandidateProfile profile = candidateProfileRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new BadRequestException("Candidate profile not found"));
+        if (!app.getCandidateProfileId().equals(profile.getId())) {
+            throw new BadRequestException("Bạn không có quyền rút đơn này");
+        }
+
+        // Only allow withdraw if still in APPLIED stage
+        if (app.getStage() != ApplicationStage.APPLIED) {
+            throw new BadRequestException(
+                    "Chỉ có thể rút đơn khi đang ở trạng thái APPLIED");
+        }
+
+        applicationRepository.delete(app);
+        log.info("User {} withdrew application {} for job {}",
+                currentUser.getEmail(), applicationId, app.getJob().getId());
+    }
+
+    // ── Existing methods ──
 
     @Override
     @Transactional(readOnly = true)
@@ -151,3 +238,4 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .build();
     }
 }
+
