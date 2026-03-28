@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+
 
 @Entity
 @Table(name = "candidate_educations")
@@ -32,11 +32,11 @@ public class CandidateEducation {
     @Column(name = "field_of_study", length = 255)
     private String fieldOfStudy;
 
-    @Column(name = "start_date")
-    private LocalDate startDate;
+    @Column(name = "start_date", length = 50)
+    private String startDate;
 
-    @Column(name = "end_date")
-    private LocalDate endDate;
+    @Column(name = "end_date", length = 50)
+    private String endDate;
 
     @Column(precision = 4, scale = 2)
     private BigDecimal gpa;

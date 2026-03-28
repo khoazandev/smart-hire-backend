@@ -3,7 +3,6 @@ package com.smarthire.backend.features.candidate.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "candidate_experiences")
@@ -28,11 +27,9 @@ public class CandidateExperience {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(name = "start_date")
-    private LocalDate startDate;
+    private String startDate;
 
-    @Column(name = "end_date")
-    private LocalDate endDate;
+    private String endDate;
 
     @Column(name = "is_current", nullable = false)
     @Builder.Default

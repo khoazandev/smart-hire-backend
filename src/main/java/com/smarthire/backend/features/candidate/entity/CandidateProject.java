@@ -28,4 +28,13 @@ public class CandidateProject {
 
     @Column(columnDefinition = "TEXT")
     private String technologies;
+
+    @Column(name = "start_date", length = 50)
+    private String startDate;
+
+    @Column(name = "end_date", length = 50)
+    private String endDate;
+
+    @Column(length = 255)
+    private String link;
 }

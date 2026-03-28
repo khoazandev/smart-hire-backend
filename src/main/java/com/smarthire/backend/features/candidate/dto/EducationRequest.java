@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+
 
 @Data
 @Builder
@@ -23,9 +23,9 @@ public class EducationRequest {
     @Size(max = 255, message = "Field of study must be less than 255 characters")
     private String fieldOfStudy;
 
-    private LocalDate startDate;
+    private String startDate;
 
-    private LocalDate endDate;
+    private String endDate;
 
     private BigDecimal gpa;
 
