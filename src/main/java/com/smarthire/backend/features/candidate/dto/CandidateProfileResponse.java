@@ -31,9 +31,14 @@ public class CandidateProfileResponse {
     private LocalDate dateOfBirth;
     private Gender gender;
     private String address;
+    private String country;
+    private String state;
     private String city;
+    private String linkedinUrl;
+    private String personalWebsite;
     private Integer yearsOfExperience;
     private JobLevel jobLevel;
+    private JobPreferenceDto jobPreference;
     
     // Meta
     private LocalDateTime createdAt;

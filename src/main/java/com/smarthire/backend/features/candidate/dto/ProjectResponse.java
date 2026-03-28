@@ -11,4 +11,7 @@ public class ProjectResponse {
     private String projectName;
     private String description;
     private String technologies;
+    private String startDate;
+    private String endDate;
+    private String link;
 }

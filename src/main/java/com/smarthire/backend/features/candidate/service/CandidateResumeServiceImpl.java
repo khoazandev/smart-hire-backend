@@ -225,6 +225,9 @@ public class CandidateResumeServiceImpl implements CandidateResumeService {
                 .projectName(request.getProjectName())
                 .description(request.getDescription())
                 .technologies(request.getTechnologies())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .link(request.getLink())
                 .build();
         project = projectRepository.save(project);
         log.info("Created project {} for user {}", project.getId(), getCurrentUser().getEmail());
@@ -242,6 +245,9 @@ public class CandidateResumeServiceImpl implements CandidateResumeService {
         project.setProjectName(request.getProjectName());
         project.setDescription(request.getDescription());
         project.setTechnologies(request.getTechnologies());
+        project.setStartDate(request.getStartDate());
+        project.setEndDate(request.getEndDate());
+        project.setLink(request.getLink());
         project = projectRepository.save(project);
         log.info("Updated project {}", project.getId());
         return mapProject(project);
@@ -305,6 +311,9 @@ public class CandidateResumeServiceImpl implements CandidateResumeService {
                 .projectName(project.getProjectName())
                 .description(project.getDescription())
                 .technologies(project.getTechnologies())
+                .startDate(project.getStartDate())
+                .endDate(project.getEndDate())
+                .link(project.getLink())
                 .build();
     }
 }

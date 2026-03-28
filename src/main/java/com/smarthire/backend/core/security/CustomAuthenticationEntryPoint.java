@@ -16,7 +16,7 @@ import java.io.IOException;
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @Override
     public void commence(HttpServletRequest request,
@@ -32,6 +32,9 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 "Authentication required. Please provide a valid token."
         );
 
-        objectMapper.writeValue(response.getOutputStream(), body);
+        try (var writer = response.getWriter()) {
+            objectMapper.writeValue(writer, body);
+            writer.flush();
+        }
     }
 }

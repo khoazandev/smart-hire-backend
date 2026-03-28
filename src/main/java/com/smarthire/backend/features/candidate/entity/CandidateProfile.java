@@ -46,7 +46,49 @@ public class CandidateProfile {
     private String address;
 
     @Column(length = 100)
+    private String country;
+
+    @Column(length = 100)
+    private String state;
+
+    @Column(length = 100)
     private String city;
+
+    @Column(name = "linkedin_url", length = 500)
+    private String linkedinUrl;
+
+    @Column(name = "personal_website", length = 500)
+    private String personalWebsite;
+
+    @Column(name = "job_titles", length = 500)
+    private String jobTitles;
+
+    @Column(name = "preferred_locations", length = 500)
+    private String preferredLocations;
+
+    @Column(name = "preferred_industry", length = 100)
+    private String preferredIndustry;
+
+    @Column(name = "employment_type", length = 100)
+    private String employmentType;
+
+    @Column(name = "preferred_experience_level", length = 100)
+    private String preferredExperienceLevel;
+
+    @Column(name = "company_size", length = 50)
+    private String companySize;
+
+    @Column(name = "work_preference", length = 50)
+    private String workPreference;
+
+    @Column(name = "willing_to_relocate")
+    private Boolean willingToRelocate;
+
+    @Column(name = "availability_date")
+    private LocalDate availabilityDate;
+
+    @Column(name = "expected_salary", length = 100)
+    private String expectedSalary;
 
     @Column(name = "years_of_experience")
     @Builder.Default

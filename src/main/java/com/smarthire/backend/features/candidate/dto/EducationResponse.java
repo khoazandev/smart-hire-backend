@@ -3,7 +3,7 @@ package com.smarthire.backend.features.candidate.dto;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+
 
 @Data
 @Builder
@@ -14,8 +14,8 @@ public class EducationResponse {
     private String institution;
     private String degree;
     private String fieldOfStudy;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private String startDate;
+    private String endDate;
     private BigDecimal gpa;
     private String description;
 }

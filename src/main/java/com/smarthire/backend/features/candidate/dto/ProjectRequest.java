@@ -17,4 +17,10 @@ public class ProjectRequest {
     private String description;
 
     private String technologies;
+
+    private String startDate;
+
+    private String endDate;
+
+    private String link;
 }

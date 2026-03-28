@@ -73,6 +73,7 @@ public class UserServiceImpl implements UserService {
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
                 .isActive(user.getIsActive())
+                .isOnboarded(user.getIsOnboarded())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

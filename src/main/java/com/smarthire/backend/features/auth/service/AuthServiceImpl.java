@@ -249,6 +249,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .isOnboarded(user.getIsOnboarded())
                 .build();
     }
 }

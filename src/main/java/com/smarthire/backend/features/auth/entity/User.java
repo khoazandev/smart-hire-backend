@@ -46,6 +46,10 @@ public class User {
     @Builder.Default
     private Boolean isActive = true;
 
+    @Column(name = "is_onboarded", nullable = false)
+    @Builder.Default
+    private Boolean isOnboarded = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

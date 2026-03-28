@@ -2,6 +2,7 @@ package com.smarthire.backend.features.auth.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +16,13 @@ public class UserProfileResponse {
     private String phone;
     private String avatarUrl;
     private String role;
+
+    @JsonProperty("isActive")
     private Boolean isActive;
+
+    @JsonProperty("isOnboarded")
+    private Boolean isOnboarded;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

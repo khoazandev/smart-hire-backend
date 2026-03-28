@@ -1,6 +1,8 @@
 package com.smarthire.backend.features.auth.controller;
 
 import com.smarthire.backend.features.auth.dto.*;
+import com.smarthire.backend.features.auth.entity.User;
+import com.smarthire.backend.features.auth.repository.UserRepository;
 import com.smarthire.backend.features.auth.service.AuthService;
 import com.smarthire.backend.shared.constants.ApiPaths;
 import com.smarthire.backend.shared.dto.ApiResponse;
@@ -26,6 +28,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new CANDIDATE or HR account and returns JWT tokens")
@@ -88,8 +91,21 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    @Operation(summary = "Get current user", description = "Returns basic info of the authenticated user")
-    public ResponseEntity<ApiResponse<Map<String, String>>> me(Authentication authentication) {
-        return ResponseEntity.ok(ApiResponse.success("Current user", Map.of("email", authentication.getName())));
+    @Operation(summary = "Get current user", description = "Returns full profile of the authenticated user")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> me(Authentication authentication) {
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Map<String, Object> userData = Map.of(
+                "id", user.getId(),
+                "email", user.getEmail(),
+                "fullName", user.getFullName(),
+                "phone", user.getPhone() != null ? user.getPhone() : "",
+                "role", user.getRole().name(),
+                "avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : "",
+                "active", user.getIsActive(),
+                "createdAt", user.getCreatedAt().toString(),
+                "isOnboarded", user.getIsOnboarded() != null ? user.getIsOnboarded() : false
+        );
+        return ResponseEntity.ok(ApiResponse.success("Current user", userData));
     }
 }
