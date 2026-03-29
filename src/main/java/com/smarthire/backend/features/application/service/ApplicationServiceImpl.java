@@ -177,6 +177,20 @@ public class ApplicationServiceImpl implements ApplicationService {
                 
         historyRepository.save(history);
 
+        // Create notification for HR
+        Long hrUserId = job.getCreatedBy().getId();
+        notificationService.createNotification(CreateNotificationRequest.builder()
+                .userId(hrUserId)
+                .type("APPLICATION_SUBMITTED")
+                .title("Ứng viên nộp đơn mới")
+                .content("Có ứng viên mới vừa nộp đơn cho vị trí: " + job.getTitle())
+                .referenceType("APPLICATION")
+                .referenceId(application.getId())
+                .build());
+
+        // Emit realtime event
+        realtimeEventService.publishApplicationSubmitted(application, profile.getUser().getId());
+
         return toResponse(application);
     }
 
