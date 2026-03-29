@@ -113,6 +113,12 @@ public class RealtimeEventService {
         String topicDest = "/topic/jobs/" + app.getJob().getId() + "/applications";
         sendToTopic(topicDest, event);
 
+        // Gửi thông báo trực tiếp vào User Queue của HR đăng Job
+        Long hrUserId = app.getJob().getCreatedBy().getId();
+        if (hrUserId != null && !hrUserId.equals(candidateUserId)) {
+            sendToUser(hrUserId.toString(), event);
+        }
+
         // Xác nhận cho candidate
         if (candidateUserId != null) {
             sendToUser(candidateUserId.toString(), event);
