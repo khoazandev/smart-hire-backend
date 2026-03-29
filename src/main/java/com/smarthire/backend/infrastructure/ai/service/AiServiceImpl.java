@@ -170,13 +170,43 @@ public class AiServiceImpl implements AiService {
             String genderStr = getTextOrEmpty(node, "gender");
             if (!genderStr.isEmpty()) {
                 try {
-                    // Try to validate it using Enum parsing
                     Gender.valueOf(genderStr.toUpperCase());
                 } catch (Exception ignored) {
-                    genderStr = null; // invalid gender string
+                    genderStr = null;
                 }
             } else {
                 genderStr = null;
+            }
+
+            // Parse skills array
+            List<String> skills = jsonArrayToList(node, "skills");
+
+            // Parse experience array
+            List<VerifiedCvData.ExperienceData> experienceList = new ArrayList<>();
+            if (node.has("experience") && node.get("experience").isArray()) {
+                for (JsonNode expNode : node.get("experience")) {
+                    experienceList.add(VerifiedCvData.ExperienceData.builder()
+                            .company(getTextOrEmpty(expNode, "company"))
+                            .title(getTextOrEmpty(expNode, "title"))
+                            .startDate(getTextOrEmpty(expNode, "startDate"))
+                            .endDate(getTextOrEmpty(expNode, "endDate"))
+                            .description(getTextOrEmpty(expNode, "description"))
+                            .build());
+                }
+            }
+
+            // Parse education array
+            List<VerifiedCvData.EducationData> educationList = new ArrayList<>();
+            if (node.has("education") && node.get("education").isArray()) {
+                for (JsonNode eduNode : node.get("education")) {
+                    educationList.add(VerifiedCvData.EducationData.builder()
+                            .school(getTextOrEmpty(eduNode, "school"))
+                            .degree(getTextOrEmpty(eduNode, "degree"))
+                            .major(getTextOrEmpty(eduNode, "major"))
+                            .startDate(getTextOrEmpty(eduNode, "startDate"))
+                            .endDate(getTextOrEmpty(eduNode, "endDate"))
+                            .build());
+                }
             }
 
             return VerifiedCvData.builder()
@@ -192,11 +222,13 @@ public class AiServiceImpl implements AiService {
                     .city(getTextOrEmpty(node, "city"))
                     .gender(genderStr != null ? genderStr.toUpperCase() : null)
                     .summary(getTextOrEmpty(node, "summary"))
+                    .skills(skills)
+                    .experience(experienceList)
+                    .education(educationList)
                     .build();
         } catch (Exception e) {
             log.error("❌ Failed to parse CV AI response: {}", e.getMessage());
             log.debug("Raw AI response: {}", aiResponse);
-            // Return empty data instead of crashing
             return VerifiedCvData.builder().cvFileId(cvFileId).build();
         }
     }
