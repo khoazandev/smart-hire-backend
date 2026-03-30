@@ -3,6 +3,7 @@ package com.smarthire.backend.features.application.controller;
 import com.smarthire.backend.core.security.SecurityUtils;
 import com.smarthire.backend.features.application.dto.ChangeStageRequest;
 import com.smarthire.backend.features.application.dto.employer.*;
+import com.smarthire.backend.features.application.service.AiFilterService;
 import com.smarthire.backend.features.application.service.EmployerApplicationService;
 import com.smarthire.backend.shared.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +23,7 @@ import java.util.List;
 public class EmployerApplicationController {
 
     private final EmployerApplicationService employerApplicationService;
+    private final AiFilterService aiFilterService;
 
     @GetMapping("/applications/all")
     @Operation(summary = "Get all applicants across all jobs", description = "Retrieves a list of all applicants for the current employer")
@@ -78,5 +80,36 @@ public class EmployerApplicationController {
             @PathVariable Long applicantId) {
         Long employerId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.success("Analysis complete", employerApplicationService.reAnalyzeApplicant(jobId, applicantId, employerId)));
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  SMART CV FILTERING — AI-powered batch filtering
+    // ═══════════════════════════════════════════════════════════
+
+    @PostMapping("/{jobId}/smart-filter")
+    @Operation(summary = "Run AI Smart Filter", description = "Triggers 2-phase AI filtering (pre-filter + deep evaluation) on all applicants of a job")
+    public ResponseEntity<ApiResponse<FilterSessionResponse>> runSmartFilter(
+            @PathVariable Long jobId,
+            @RequestBody(required = false) RunFilterRequest conditions) {
+        Long employerId = SecurityUtils.getCurrentUserId();
+        FilterSessionResponse result = aiFilterService.runFilter(jobId, employerId, conditions);
+        return ResponseEntity.ok(ApiResponse.success("Smart filter completed", result));
+    }
+
+    @GetMapping("/{jobId}/smart-filter/{sessionId}")
+    @Operation(summary = "Get filter session result", description = "Retrieves the result of a specific AI filter run")
+    public ResponseEntity<ApiResponse<FilterSessionResponse>> getFilterSession(
+            @PathVariable Long jobId,
+            @PathVariable Long sessionId) {
+        Long employerId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(aiFilterService.getFilterSession(sessionId, employerId)));
+    }
+
+    @GetMapping("/{jobId}/smart-filter/history")
+    @Operation(summary = "Get filter history", description = "Retrieves all past AI filter runs for a job")
+    public ResponseEntity<ApiResponse<List<FilterSessionResponse>>> getFilterHistory(
+            @PathVariable Long jobId) {
+        Long employerId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(aiFilterService.getFilterHistory(jobId, employerId)));
     }
 }

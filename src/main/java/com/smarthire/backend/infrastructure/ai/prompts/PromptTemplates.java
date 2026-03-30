@@ -289,4 +289,135 @@ public final class PromptTemplates {
             - changeReason must be in Vietnamese
             - Return ONLY the JSON, no other text
             """;
+
+    // ═══════════════════════════════════════════════════════════════
+    //  SMART CV FILTERING — 2-Phase AI prompts for HR batch filtering
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Phase 1 — Batch Pre-filter.
+     * AI reads ONLY title + summary of each candidate to quickly classify them.
+     * Input: JD text + JSON array of candidate snippets.
+     * Output: JSON array of classification results.
+     *
+     * Placeholders:
+     *   %s → Job title
+     *   %s → Job description
+     *   %s → Job requirements
+     *   %s → Required skills (comma-separated)
+     *   %s → Job level
+     *   %s → HR filter conditions JSON
+     *   %s → Candidate snippets JSON array
+     */
+    public static final String CV_BATCH_PRE_FILTER_PROMPT = """
+            You are a senior HR recruiter AI performing fast CV screening.
+            Your task: quickly classify candidates by reading ONLY their CV title and professional summary.
+            DO NOT evaluate in depth — this is a quick pre-screening step.
+            
+            === JOB DESCRIPTION ===
+            Title: %s
+            Description: %s
+            Requirements: %s
+            Required Skills: %s
+            Job Level: %s
+            
+            === HR FILTER CONDITIONS ===
+            %s
+            
+            === CANDIDATE SNIPPETS ===
+            %s
+            
+            === INSTRUCTIONS ===
+            For each candidate, determine if they are potentially suitable for this position based
+            ONLY on their title, summary, current role, and top keywords.
+            
+            Return ONLY a valid JSON array (no markdown, no code blocks, just raw JSON):
+            [
+                {
+                    "candidateId": 123,
+                    "classification": "SUITABLE | NOT_SUITABLE | NEEDS_REVIEW",
+                    "confidence": "HIGH | MEDIUM | LOW",
+                    "reason": "Brief reason in Vietnamese (1-2 sentences max)"
+                }
+            ]
+            
+            CLASSIFICATION RULES:
+            - SUITABLE: Title/summary clearly aligns with the job role and requirements
+            - NOT_SUITABLE: Title/summary indicates a completely different career path or skill set
+            - NEEDS_REVIEW: Ambiguous — could be suitable but need deeper analysis to confirm
+            - When in doubt, prefer NEEDS_REVIEW over NOT_SUITABLE
+            - If candidate has no title or summary, classify as NEEDS_REVIEW
+            - Do NOT reject candidates just because of seniority mismatch — a junior can apply for mid-level
+            - Focus on ROLE ALIGNMENT, not perfection
+            
+            CRITICAL:
+            - You MUST return results for ALL candidates in the input array
+            - candidateId must match exactly from the input
+            - reason must be in Vietnamese
+            - Return ONLY the JSON array, no other text
+            """;
+
+    /**
+     * Phase 2 — Deep Evaluation.
+     * AI reads the FULL CV content and performs detailed matching against JD.
+     * Run only for candidates that passed Phase 1 pre-filter.
+     *
+     * Placeholders:
+     *   %s → Job title
+     *   %s → Job description
+     *   %s → Job requirements
+     *   %s → Required skills (comma-separated)
+     *   %s → Job level
+     *   %s → HR filter conditions JSON
+     *   %s → Full CV content text
+     */
+    public static final String CV_DEEP_EVALUATION_PROMPT = """
+            You are a senior HR recruiter AI performing detailed CV evaluation.
+            This candidate has already passed the initial screening and is potentially suitable.
+            Now perform a thorough analysis.
+            
+            === JOB DESCRIPTION ===
+            Title: %s
+            Description: %s
+            Requirements: %s
+            Required Skills: %s
+            Job Level: %s
+            
+            === HR FILTER CONDITIONS ===
+            %s
+            
+            === FULL CV CONTENT ===
+            %s
+            
+            === INSTRUCTIONS ===
+            Evaluate this candidate thoroughly against the job description.
+            Consider: skills match, experience relevance, education, projects, certifications,
+            and overall career trajectory.
+            
+            Return ONLY a valid JSON object (no markdown, no code blocks, just raw JSON):
+            {
+                "matchScore": 78,
+                "classification": "STRONG_FIT | MODERATE_FIT | WEAK_FIT | NOT_SUITABLE",
+                "confidence": "HIGH | MEDIUM | LOW",
+                "summary": "2-3 sentence assessment in Vietnamese",
+                "strengths": ["strength 1 in Vietnamese", "strength 2"],
+                "missingRequirements": ["missing 1 in Vietnamese", "missing 2"],
+                "recommendation": "Hiring recommendation in Vietnamese (1-2 sentences)"
+            }
+            
+            SCORING GUIDE:
+            - 85-100 (STRONG_FIT): Excellent match. Meets most/all requirements. Ready for interview.
+            - 60-84 (MODERATE_FIT): Good potential. Meets core requirements but has gaps.
+            - 30-59 (WEAK_FIT): Partial match. Significant gaps but some transferable skills.
+            - 0-29 (NOT_SUITABLE): Does not meet key requirements.
+            
+            EVALUATION RULES:
+            - matchScore must be an integer 0-100
+            - DO NOT score based only on keyword matching — evaluate context and relevance
+            - Consider years of experience, project complexity, and role alignment
+            - Provide 2-5 strengths, 1-4 missingRequirements
+            - If the candidate exceeds requirements, score accordingly (90+)
+            - All text fields must be in Vietnamese
+            - Return ONLY the JSON, no other text
+            """;
 }

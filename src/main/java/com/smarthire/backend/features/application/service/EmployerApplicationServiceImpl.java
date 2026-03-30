@@ -214,17 +214,24 @@ public class EmployerApplicationServiceImpl implements EmployerApplicationServic
                         .build())
                 .toList();
 
+        // Lấy dữ liệu thực từ CandidateProfile & User
+        String candidateName = cp.getUser().getFullName();
+        String candidatePhone = cp.getUser().getPhone();
+        String candidateAvatar = cp.getUser().getAvatarUrl();
+        String candidateTitle = cp.getHeadline(); // headline from profile
+        Integer candidateExp = cp.getYearsOfExperience();
+
         return EmployerApplicationResponse.builder()
                 .id(app.getId())
                 .jobId(app.getJob().getId())
                 .candidateId(cp.getId())
                 .jobTitle(app.getJob().getTitle())
-                .name(cp.getUser().getFullName())
+                .name(candidateName != null ? candidateName : "Ứng viên")
                 .email(cp.getUser().getEmail())
-                .phone("0123456789")
-                .avatarUrl(null)
-                .currentTitle("Software Engineer")
-                .experienceYears(2)
+                .phone(candidatePhone != null ? candidatePhone : "Chưa cập nhật")
+                .avatarUrl(candidateAvatar)
+                .currentTitle(candidateTitle != null ? candidateTitle : "Chưa cập nhật")
+                .experienceYears(candidateExp != null ? candidateExp : 0)
                 .status(app.getStage())
                 .appliedAt(app.getAppliedAt())
                 .aiAnalysis(ai)

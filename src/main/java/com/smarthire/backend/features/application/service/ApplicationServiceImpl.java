@@ -357,11 +357,22 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     private ApplicationResponse toResponse(Application app) {
+        CandidateProfile profile = app.getCandidateProfile();
+        User user = profile != null ? profile.getUser() : null;
+        CvFile cv = app.getCvFile();
+
         return ApplicationResponse.builder()
                 .id(app.getId())
-                .jobId(app.getJob().getId())
-                .candidateProfileId(app.getCandidateProfile().getId())
-                .cvFileId(app.getCvFile() != null ? app.getCvFile().getId() : null)
+                .jobId(app.getJob() != null ? app.getJob().getId() : null)
+                .jobTitle(app.getJob() != null ? app.getJob().getTitle() : null)
+                .candidateProfileId(profile != null ? profile.getId() : null)
+                .candidateName(user != null ? user.getFullName() : "Unknown")
+                .candidateEmail(user != null ? user.getEmail() : null)
+                .candidateHeadline(profile != null ? profile.getHeadline() : null)
+                .candidateYearsOfExperience(profile != null ? profile.getYearsOfExperience() : 0)
+                .cvFileId(cv != null ? cv.getId() : null)
+                .cvFileName(cv != null ? cv.getFileName() : null)
+                .cvFilePath(cv != null ? cv.getFilePath() : null)
                 .stage(app.getStage())
                 .appliedAt(app.getAppliedAt())
                 .build();

@@ -15,8 +15,20 @@ import java.time.LocalDateTime;
 public class ApplicationResponse {
     private Long id;
     private Long jobId;
+    private String jobTitle;
     private Long candidateProfileId;
+    
+    // Candidate details
+    private String candidateName;
+    private String candidateEmail;
+    private String candidateHeadline;
+    private Integer candidateYearsOfExperience;
+    
+    // CV Details
     private Long cvFileId;
+    private String cvFileName;
+    private String cvFilePath;
+    
     private ApplicationStage stage;
     private LocalDateTime appliedAt;
 }
