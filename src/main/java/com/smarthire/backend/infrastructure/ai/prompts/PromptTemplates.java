@@ -14,7 +14,12 @@ public final class PromptTemplates {
      * Output: JSON chứa personal info.
      */
     public static final String CV_PARSE_PROMPT = """
-            Analyze this CV/Resume document and extract structured information.
+            Analyze this CV/Resume text and extract structured information.
+            
+            === CV TEXT ===
+            %s
+            
+            === INSTRUCTIONS ===
             
             Return ONLY a valid JSON object with this EXACT structure (no markdown, no code blocks, just raw JSON):
             {

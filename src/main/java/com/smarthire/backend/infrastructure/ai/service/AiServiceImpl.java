@@ -10,6 +10,8 @@ import com.smarthire.backend.features.candidate.entity.CvFile;
 import com.smarthire.backend.features.candidate.repository.CvFileRepository;
 import com.smarthire.backend.features.onboarding.dto.VerifiedCvData;
 import com.smarthire.backend.infrastructure.ai.client.GeminiClient;
+import com.smarthire.backend.infrastructure.ai.client.OllamaClient;
+import com.smarthire.backend.infrastructure.ai.client.CvTextExtractor;
 import com.smarthire.backend.infrastructure.ai.prompts.PromptTemplates;
 import com.smarthire.backend.infrastructure.storage.FileStorageService;
 import com.smarthire.backend.shared.enums.Gender;
@@ -32,6 +34,8 @@ import java.util.List;
 public class AiServiceImpl implements AiService {
 
     private final GeminiClient geminiClient;
+    private final OllamaClient ollamaClient;
+    private final CvTextExtractor cvTextExtractor;
     private final CvFileRepository cvFileRepository;
     private final FileStorageService fileStorageService;
     private final com.smarthire.backend.features.candidate.repository.AiCvReviewRepository aiCvReviewRepository;
@@ -48,8 +52,12 @@ public class AiServiceImpl implements AiService {
         Path filePath = fileStorageService.getFilePath(cvFile.getFilePath());
         String mimeType = getMimeType(cvFile.getFileName());
 
-        // Gọi Gemini với file upload
-        String aiResponse = geminiClient.chatWithFile(filePath, mimeType, PromptTemplates.CV_PARSE_PROMPT);
+        // Extract raw text locally
+        String cvText = cvTextExtractor.extractText(filePath, mimeType);
+
+        // Gọi Ollama
+        String prompt = String.format(PromptTemplates.CV_PARSE_PROMPT, cvText);
+        String aiResponse = ollamaClient.chat(prompt);
 
         // Parse JSON response → VerifiedCvData
         return parseCvResponse(aiResponse, cvFileId);
@@ -162,11 +170,10 @@ public class AiServiceImpl implements AiService {
         try {
             CvFile cvFile = application.getCvFile();
             if (cvFile != null) {
-                // Upload file lên Gemini và extract text content
+                // Extract text content locally
                 Path filePath = fileStorageService.getFilePath(cvFile.getFilePath());
                 String mimeType = getMimeType(cvFile.getFileName());
-                return geminiClient.chatWithFile(filePath, mimeType,
-                        "Extract all text content from this CV/Resume document. Return only the text content, no formatting.");
+                return cvTextExtractor.extractText(filePath, mimeType);
             }
         } catch (Exception e) {
             log.warn("Could not extract CV content, using fallback: {}", e.getMessage());
