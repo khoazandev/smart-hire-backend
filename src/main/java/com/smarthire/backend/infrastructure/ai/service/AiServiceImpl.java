@@ -9,7 +9,6 @@ import com.smarthire.backend.features.candidate.entity.AiCvReview;
 import com.smarthire.backend.features.candidate.entity.CvFile;
 import com.smarthire.backend.features.candidate.repository.CvFileRepository;
 import com.smarthire.backend.features.onboarding.dto.VerifiedCvData;
-import com.smarthire.backend.infrastructure.ai.client.GeminiClient;
 import com.smarthire.backend.infrastructure.ai.client.OllamaClient;
 import com.smarthire.backend.infrastructure.ai.client.CvTextExtractor;
 import com.smarthire.backend.infrastructure.ai.prompts.PromptTemplates;
@@ -33,7 +32,6 @@ import java.util.List;
 @Slf4j
 public class AiServiceImpl implements AiService {
 
-    private final GeminiClient geminiClient;
     private final OllamaClient ollamaClient;
     private final CvTextExtractor cvTextExtractor;
     private final CvFileRepository cvFileRepository;
@@ -117,10 +115,12 @@ public class AiServiceImpl implements AiService {
             log.warn("Could not load cv-review-rules.json: {}", e.getMessage());
         }
 
-        String prompt = String.format(PromptTemplates.CV_REVIEW_PROMPT, rules);
+        String cvText = cvTextExtractor.extractText(filePath, mimeType);
 
-        // Gọi Gemini với file upload
-        String aiResponse = geminiClient.chatWithFile(filePath, mimeType, prompt);
+        String prompt = String.format(PromptTemplates.CV_REVIEW_PROMPT, rules, cvText);
+
+        // Gọi Ollama với prompt (chứa text, rules)
+        String aiResponse = ollamaClient.chat(prompt);
 
         // Parse JSON → AiCvReview entity
         return parseReviewResponse(aiResponse, cvFile);
@@ -148,8 +148,10 @@ public class AiServiceImpl implements AiService {
             log.warn("Could not load latest review for optimization: {}", e.getMessage());
         }
 
-        String prompt = String.format(PromptTemplates.CV_OPTIMIZE_PROMPT, reviewJson);
-        String aiResponse = geminiClient.chatWithFile(filePath, mimeType, prompt);
+        String cvText = cvTextExtractor.extractText(filePath, mimeType);
+
+        String prompt = String.format(PromptTemplates.CV_OPTIMIZE_PROMPT, reviewJson, cvText);
+        String aiResponse = ollamaClient.chat(prompt);
 
         return cleanJsonResponse(aiResponse);
     }

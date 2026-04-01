@@ -143,6 +143,9 @@ public final class PromptTemplates {
             STRICTLY follow these governance rules (provided as JSON) when evaluating:
             %s
             
+            === CV TEXT ===
+            %s
+            
             SCORING THRESHOLD (used to decide status for each item):
             - 0-49 (WEAK/CRITICAL): Needs strong revision, may need complete rewrite
             - 50-69 (IMPROVE): Selective improvement needed, only rewrite if truly necessary
@@ -248,6 +251,9 @@ public final class PromptTemplates {
             Below is the review result with section-by-section analysis.
             
             PREVIOUS REVIEW RESULT:
+            %s
+            
+            === CV TEXT ===
             %s
             
             YOUR TASK:
