@@ -20,6 +20,8 @@ public class InterviewResponse {
     private String meetingUrl;
     private String note;
     private InterviewStatus status;
+    private Integer round;
+    private Boolean isPassed;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

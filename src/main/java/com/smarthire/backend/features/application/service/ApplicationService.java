@@ -18,4 +18,5 @@ public interface ApplicationService {
     ApplicationResponse getApplicationById(Long id);
     List<ApplicationResponse> getApplicationsByJob(Long jobId, String stage);
     ApplicationResponse changeStage(Long applicationId, Long userId, ChangeStageRequest request);
+    ApplicationResponse passRound1(Long applicationId, Long userId);
 }

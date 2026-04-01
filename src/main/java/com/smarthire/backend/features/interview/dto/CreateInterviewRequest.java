@@ -25,4 +25,6 @@ public class CreateInterviewRequest {
     private Integer durationMinutes;
     private String meetingUrl;
     private String note;
+    
+    private Integer round = 1;
 }

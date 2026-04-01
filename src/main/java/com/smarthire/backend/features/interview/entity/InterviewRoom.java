@@ -53,6 +53,13 @@ public class InterviewRoom {
     @Builder.Default
     private InterviewStatus status = InterviewStatus.SCHEDULED;
 
+    @Column(name = "round")
+    @Builder.Default
+    private Integer round = 1;
+
+    @Column(name = "is_passed")
+    private Boolean isPassed;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

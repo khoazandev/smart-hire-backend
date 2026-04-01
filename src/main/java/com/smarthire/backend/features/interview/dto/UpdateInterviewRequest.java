@@ -14,4 +14,5 @@ public class UpdateInterviewRequest {
     private Integer durationMinutes;
     private String meetingUrl;
     private String note;
+    private Boolean isPassed;
 }

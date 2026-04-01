@@ -42,7 +42,16 @@ public class InterviewServiceImpl implements InterviewService {
         Application application = applicationRepository.findById(request.getApplicationId())
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + request.getApplicationId()));
 
+        if (request.getRound() != null && request.getRound() > 1 && Boolean.FALSE.equals(application.getIsPassedRound1())) {
+            throw new ForbiddenException("Candidate must pass Round 1 to be scheduled for Round " + request.getRound());
+        }
+
         String roomCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        
+        String meetingUrl = request.getMeetingUrl();
+        if (meetingUrl == null || meetingUrl.isBlank()) {
+            meetingUrl = "https://meet.jit.si/SmartHire-" + roomCode;
+        }
 
         InterviewRoom room = InterviewRoom.builder()
                 .application(application)
@@ -51,8 +60,9 @@ public class InterviewServiceImpl implements InterviewService {
                 .roomCode(roomCode)
                 .scheduledAt(request.getScheduledAt())
                 .durationMinutes(request.getDurationMinutes() != null ? request.getDurationMinutes() : 60)
-                .meetingUrl(request.getMeetingUrl())
+                .meetingUrl(meetingUrl)
                 .note(request.getNote())
+                .round(request.getRound() != null ? request.getRound() : 1)
                 .status(InterviewStatus.SCHEDULED)
                 .build();
 
@@ -213,6 +223,7 @@ public class InterviewServiceImpl implements InterviewService {
         if (request.getDurationMinutes() != null) room.setDurationMinutes(request.getDurationMinutes());
         if (request.getMeetingUrl() != null) room.setMeetingUrl(request.getMeetingUrl());
         if (request.getNote() != null) room.setNote(request.getNote());
+        if (request.getIsPassed() != null) room.setIsPassed(request.getIsPassed());
 
         InterviewRoom saved = interviewRoomRepository.save(room);
         log.info("Interview room updated: {}", saved.getRoomName());
@@ -273,6 +284,8 @@ public class InterviewServiceImpl implements InterviewService {
                 .meetingUrl(room.getMeetingUrl())
                 .note(room.getNote())
                 .status(room.getStatus())
+                .round(room.getRound())
+                .isPassed(room.getIsPassed())
                 .createdAt(room.getCreatedAt())
                 .updatedAt(room.getUpdatedAt())
                 .build();

@@ -39,6 +39,10 @@ public class Application {
     @Builder.Default
     private ApplicationStage stage = ApplicationStage.APPLIED;
 
+    @Column(name = "is_passed_round1")
+    @Builder.Default
+    private Boolean isPassedRound1 = false;
+
     @Column(name = "applied_at", nullable = false, updatable = false)
     private LocalDateTime appliedAt;
 

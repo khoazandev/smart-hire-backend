@@ -129,6 +129,23 @@ public class ApplicationServiceImpl implements ApplicationService {
         return toResponse(saved);
     }
 
+    @Override
+    @Transactional
+    public ApplicationResponse passRound1(Long applicationId, Long userId) {
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        // Verify the user exists before allowing the action
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+        application.setIsPassedRound1(true);
+        Application saved = applicationRepository.save(application);
+
+        log.info("Application {} marked as PASS_ROUND_1 by {}", applicationId, userId);
+        return toResponse(saved);
+    }
+
     // ── Candidate features (BE021) ──
 
     @Override

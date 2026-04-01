@@ -82,4 +82,13 @@ public class ApplicationController {
         ApplicationResponse response = applicationService.changeStage(id, userId, request);
         return ResponseEntity.ok(ApiResponse.success("Application stage updated successfully", response));
     }
+
+    @PatchMapping("/{id}/pass-round-1")
+    @Operation(summary = "Pass Round 1", description = "HR/Admin marks the candidate as passed round 1")
+    public ResponseEntity<ApiResponse<ApplicationResponse>> passRound1(
+            @PathVariable Long id) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        ApplicationResponse response = applicationService.passRound1(id, userId);
+        return ResponseEntity.ok(ApiResponse.success("Candidate passed round 1 successfully", response));
+    }
 }
