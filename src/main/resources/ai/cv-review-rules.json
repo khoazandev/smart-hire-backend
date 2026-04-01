@@ -1,0 +1,56 @@
+[
+  {
+    "id": "RULE_01",
+    "name": "Do Not Fix Strong Content",
+    "description": "Nếu câu, bullet hoặc section đã mạnh, đánh dấu status=STRONG, action=KEEP. Không rewrite chỉ để trông khác.",
+    "enforcement": "Mọi item score >= 85 phải có status=STRONG, action=KEEP"
+  },
+  {
+    "id": "RULE_02",
+    "name": "Suggest Only High-Value Improvements",
+    "description": "Chỉ hiện suggestion khi cải thiện rõ ràng ít nhất 1 trong: clarity, specificity, impact, ATS compatibility, relevance, readability. Nếu không cải thiện rõ, không gợi ý.",
+    "enforcement": "Mỗi suggestion phải gắn reason cụ thể thuộc 1 trong 6 tiêu chí trên"
+  },
+  {
+    "id": "RULE_03",
+    "name": "Preserve Original Meaning",
+    "description": "Giữ nguyên ý nghĩa gốc, mức độ đóng góp thật, dữ kiện có trong CV. Không bịa số liệu, thêm thành tựu không có, thổi phồng vai trò, biến 'support' thành 'lead' khi không có căn cứ.",
+    "enforcement": "suggestedText không được thêm thông tin chưa có trong originalText"
+  },
+  {
+    "id": "RULE_04",
+    "name": "Minimal Necessary Change",
+    "description": "Ưu tiên sửa đúng chỗ, thay ít nhất có thể, giữ cấu trúc gốc. Nếu sửa ít đã đủ tốt thì không rewrite toàn bộ.",
+    "enforcement": "suggestedText chỉ thay đổi phần cần thiết"
+  },
+  {
+    "id": "RULE_05",
+    "name": "Prioritize Critical Issues First",
+    "description": "Thứ tự ưu tiên: (1) ATS issues, (2) Missing critical info, (3) Weak/vague bullets, (4) Missing JD keywords, (5) Wording/polish. Lỗi cosmetic không xếp trên lỗi quan trọng.",
+    "enforcement": "topIssues phải sắp xếp theo thứ tự ưu tiên này"
+  },
+  {
+    "id": "RULE_06",
+    "name": "Avoid Repetitive Feedback",
+    "description": "Nếu nhiều bullet cùng một lỗi, gom nhóm thay vì lặp lại. Ví dụ: 'Several experience bullets lack measurable outcomes' thay vì lặp 4 lần cùng nhận xét.",
+    "enforcement": "Không có 2 items trùng reason trong cùng section"
+  },
+  {
+    "id": "RULE_07",
+    "name": "Context-Aware Review",
+    "description": "Review phải phụ thuộc: target role, level ứng viên, loại section. Intern: project/skills/tech stack quan trọng hơn. Senior: impact/ownership/leadership quan trọng hơn.",
+    "enforcement": "Đánh giá sát với level thể hiện trong CV"
+  },
+  {
+    "id": "RULE_08",
+    "name": "Suggest Don't Force",
+    "description": "Phân loại action rõ ràng: MUST_FIX (bắt buộc sửa), IMPROVE (nên cải thiện), KEEP (giữ nguyên). Điều này tăng tin cậy thay vì ép user sửa tất cả.",
+    "enforcement": "Mỗi item phải có action thuộc 1 trong 3 giá trị trên"
+  },
+  {
+    "id": "RULE_09",
+    "name": "Validate Rewrite Before Showing",
+    "description": "Mọi suggestedText kiểm tra: giữ đúng meaning, không bịa thông tin, câu tốt hơn thật, không dài dòng quá. Nếu không vượt qua, trả suggestedText = null.",
+    "enforcement": "suggestedText chỉ hiện khi thực sự tốt hơn originalText"
+  }
+]
