@@ -48,7 +48,6 @@ public class SecurityConfig {
                 .accessDeniedHandler(accessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
-                // ── Public endpoints ──
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers(
                     ApiPaths.AUTH + "/register",
@@ -57,40 +56,22 @@ public class SecurityConfig {
                     ApiPaths.AUTH + "/forgot-password",
                     ApiPaths.AUTH + "/reset-password"
                 ).permitAll()
-
-                // ── Swagger / OpenAPI ──
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**"
-                ).permitAll()
-
-                // ── Static uploads ──
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
-
-                // ── Public job listing (browsable without login) ──
                 .requestMatchers(HttpMethod.GET, ApiPaths.JOBS + "/public", ApiPaths.JOBS + "/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, ApiPaths.COMPANIES, ApiPaths.COMPANIES + "/**").permitAll()
-
-                // ── Admin-only endpoints ──
                 .requestMatchers(ApiPaths.ADMIN + "/**").hasRole("ADMIN")
-
-                // ── HR + Admin endpoints ──
                 .requestMatchers(HttpMethod.POST, ApiPaths.JOBS).hasAnyRole("HR", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, ApiPaths.JOBS + "/**").hasAnyRole("HR", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, ApiPaths.JOBS + "/**").hasAnyRole("HR", "ADMIN")
                 .requestMatchers(ApiPaths.COMPANIES + "/**").hasAnyRole("HR", "ADMIN")
                 .requestMatchers(ApiPaths.DASHBOARD + "/**").hasAnyRole("HR", "ADMIN")
-
-                // ── Everything else requires authentication ──
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-    // ── CORS ──
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -105,8 +86,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
-    // ── Beans ──
 
     @Bean
     public PasswordEncoder passwordEncoder() {
