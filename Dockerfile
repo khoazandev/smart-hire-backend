@@ -1,27 +1,44 @@
-# ── Build stage ──────────────────────────────────────────────
-FROM eclipse-temurin:17-jdk-alpine AS build
+# ═══════════════════════════════════════════════════════════
+#  SmartHire Backend — Dockerfile (Multi-stage)
+# ═══════════════════════════════════════════════════════════
+
+# Stage 1: Build dependency resolution & compilation
+FROM eclipse-temurin:17-jdk-jammy AS build
 WORKDIR /app
 
-# Cache Maven dependencies
+# Install maven wrapper + POM first to cache dependencies
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+RUN chmod +x ./mvnw
+RUN ./mvnw dependency:go-offline -B
 
-# Build application
-COPY src/ src/
-RUN ./mvnw package -DskipTests -B
+# Copy the rest of the source and build
+COPY src ./src
+ARG PROFILE=prod
+# Skip tests in container build (assuming CI runs them)
+RUN ./mvnw package -DskipTests -P${PROFILE}
 
-# ── Runtime stage ────────────────────────────────────────────
-FROM eclipse-temurin:17-jre-alpine
+# Stage 2: Minimal Runtime
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# Create uploads directory
-RUN mkdir -p /app/uploads
+# Create a non-root user for security
+RUN groupadd -r spring && useradd -r -g spring spring
 
-# Copy jar from build stage
+# Create uploads directory (needed by Railway / local) and fix permissions
+RUN mkdir -p /app/uploads
+RUN chown -R spring:spring /app
+
+USER spring:spring
+
+# Extract the JAR built in the previous stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Railway injects PORT env var
+# Expose standard port
 EXPOSE 8080
 
+# Environment variables could be overridden via docker-compose or Kubernetes configMap
+ENV SPRING_PROFILES_ACTIVE=prod
+
+# Execute
 ENTRYPOINT ["java", "-jar", "app.jar"]
