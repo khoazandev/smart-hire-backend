@@ -27,6 +27,9 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
+
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new CANDIDATE or HR account and returns JWT tokens")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
@@ -40,6 +43,23 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(ApiResponse.success("Login successful", response));
+    }
+
+    @GetMapping("/github/callback")
+    @Operation(summary = "GitHub OAuth Callback", description = "Handles redirect from GitHub and redirects to frontend")
+    public ResponseEntity<Void> githubCallback(@org.springframework.web.bind.annotation.RequestParam("code") String code) {
+        AuthResponse response = authService.githubLogin(code);
+        
+        // Return 302 Redirect to Frontend's callback handler to set the token inside the browser
+        String redirectUrl = frontendUrl + "/oauth/github-success" 
+                + "?access_token=" + response.getAccessToken() 
+                + "&refresh_token=" + response.getRefreshToken()
+                + "&role=" + response.getRole()
+                + "&onboarded=" + response.getIsOnboarded();
+
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(java.net.URI.create(redirectUrl))
+                .build();
     }
 
     @PostMapping("/refresh-token")
@@ -57,11 +77,12 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<Map<String, String>>> forgotPassword(
+    @Operation(summary = "Forgot password", description = "Sends a password reset link to the user's email")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) {
-        String token = authService.forgotPassword(request);
-        return ResponseEntity.ok(ApiResponse.success("Password reset token generated",
-                Map.of("resetToken", token, "note", "In production, this token will be sent via email")));
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.success(
+                "If an account with that email exists, a password reset link has been sent.", null));
     }
 
     @PostMapping("/reset-password")

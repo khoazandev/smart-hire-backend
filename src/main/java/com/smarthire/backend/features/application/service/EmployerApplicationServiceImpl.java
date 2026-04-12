@@ -105,7 +105,7 @@ public class EmployerApplicationServiceImpl implements EmployerApplicationServic
     @Transactional
     public EmployerApplicationResponse updateStage(Long jobId, Long applicantId, Long employerId, ChangeStageRequest request) {
         Application app = getApplicationAndVerifyEmployer(jobId, applicantId, employerId);
-        coreApplicationService.changeStage(app.getId(), employerId, request);
+        coreApplicationService.changeStage(app.getId(), request);
         try {
             return getApplicantDetail(jobId, applicantId, employerId);
         } catch (Exception e) {

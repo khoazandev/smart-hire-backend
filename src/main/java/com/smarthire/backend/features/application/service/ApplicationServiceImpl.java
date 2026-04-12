@@ -3,16 +3,19 @@ package com.smarthire.backend.features.application.service;
 import com.smarthire.backend.core.exception.BadRequestException;
 import com.smarthire.backend.core.exception.ResourceNotFoundException;
 import com.smarthire.backend.core.security.SecurityUtils;
-import com.smarthire.backend.features.application.dto.ApplyRequest;
+import com.smarthire.backend.features.application.dto.ApplyJobRequest;
 import com.smarthire.backend.features.application.dto.ApplicationResponse;
 import com.smarthire.backend.features.application.dto.ChangeStageRequest;
 import com.smarthire.backend.features.application.dto.StageHistoryDto;
+import com.smarthire.backend.features.application.dto.ApplicationTrackingResponse;
 import com.smarthire.backend.features.application.entity.Application;
 import com.smarthire.backend.features.application.entity.ApplicationStageHistory;
 import com.smarthire.backend.features.application.repository.ApplicationRepository;
 import com.smarthire.backend.features.auth.entity.User;
 import com.smarthire.backend.features.candidate.entity.CandidateProfile;
+import com.smarthire.backend.features.candidate.entity.CvFile;
 import com.smarthire.backend.features.candidate.repository.CandidateProfileRepository;
+import com.smarthire.backend.features.candidate.repository.CvFileRepository;
 import com.smarthire.backend.features.job.entity.Job;
 import com.smarthire.backend.features.job.repository.JobRepository;
 import com.smarthire.backend.features.notification.dto.CreateNotificationRequest;
@@ -34,6 +37,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final RealtimeEventService realtimeEventService;
     private final CandidateProfileRepository candidateProfileRepository;
+    private final CvFileRepository cvFileRepository;
     private final NotificationService notificationService;
     private final JobRepository jobRepository;
 
@@ -41,7 +45,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public ApplicationResponse apply(ApplyRequest request) {
+    public ApplicationResponse apply(ApplyJobRequest request) {
         User currentUser = SecurityUtils.getCurrentUser();
 
         // 1. Lookup candidate profile
@@ -60,11 +64,15 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new BadRequestException("Bạn đã ứng tuyển vào vị trí này rồi");
         }
 
-        // 4. Create and save
+        // 4. Validate CvFile exists
+        CvFile cvFile = cvFileRepository.findById(request.getCvFileId())
+                .orElseThrow(() -> new ResourceNotFoundException("CV File not found"));
+
+        // 5. Create and save
         Application application = Application.builder()
                 .job(job)
-                .candidateProfileId(profile.getId())
-                .cvFileId(request.getCvFileId())
+                .candidateProfile(profile)
+                .cvFile(cvFile)
                 .stage(ApplicationStage.APPLIED)
                 .build();
 
@@ -79,7 +87,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ApplicationResponse> getMyApplications() {
+    public List<ApplicationTrackingResponse> getMyApplications() {
         User currentUser = SecurityUtils.getCurrentUser();
 
         CandidateProfile profile = candidateProfileRepository.findByUserId(currentUser.getId())
@@ -88,7 +96,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         List<Application> apps = applicationRepository
                 .findByCandidateProfileIdOrderByAppliedAtDesc(profile.getId());
-        return apps.stream().map(this::toResponse).toList();
+        return apps.stream().map(this::toTrackingResponse).toList();
     }
 
     // ── Withdraw application ──
@@ -102,7 +110,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         // Verify ownership
         CandidateProfile profile = candidateProfileRepository.findByUserId(currentUser.getId())
                 .orElseThrow(() -> new BadRequestException("Candidate profile not found"));
-        if (!app.getCandidateProfileId().equals(profile.getId())) {
+        if (!app.getCandidateProfile().getId().equals(profile.getId())) {
             throw new BadRequestException("Bạn không có quyền rút đơn này");
         }
 
@@ -160,7 +168,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .changedBy(currentUser)
                 .note(request.getNote())
                 .build();
-        app.getStageHistory().add(history);
+        app.getHistory().add(history);
         app.setStage(newStage);
 
         Application saved = applicationRepository.save(app);
@@ -168,7 +176,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 currentUser.getEmail());
 
         // ── Phát realtime event qua WebSocket ──
-        Long candidateUserId = lookupCandidateUserId(saved.getCandidateProfileId());
+        Long candidateUserId = lookupCandidateUserId(saved.getCandidateProfile().getId());
         realtimeEventService.publishStageChanged(saved, oldStage, newStage, currentUser.getId(), candidateUserId);
 
         // ── Tạo in-app notification cho candidate ──
@@ -214,7 +222,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     private ApplicationResponse toResponse(Application app) {
-        List<StageHistoryDto> historyDtos = app.getStageHistory().stream()
+        List<StageHistoryDto> historyDtos = app.getHistory().stream()
                 .map(h -> StageHistoryDto.builder()
                         .id(h.getId())
                         .fromStage(h.getFromStage())
@@ -229,12 +237,26 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .id(app.getId())
                 .jobId(app.getJob().getId())
                 .jobTitle(app.getJob().getTitle())
-                .candidateProfileId(app.getCandidateProfileId())
-                .cvFileId(app.getCvFileId())
+                .candidateProfileId(app.getCandidateProfile().getId())
+                .cvFileId(app.getCvFile().getId())
                 .stage(app.getStage())
                 .appliedAt(app.getAppliedAt())
                 .updatedAt(app.getUpdatedAt())
                 .stageHistory(historyDtos)
+                .build();
+    }
+
+    private ApplicationTrackingResponse toTrackingResponse(Application app) {
+        return ApplicationTrackingResponse.builder()
+                .id(app.getId())
+                .jobId(app.getJob().getId())
+                .jobTitle(app.getJob().getTitle())
+                .companyName(app.getJob().getCompany() != null ? app.getJob().getCompany().getName() : "")
+                .currentStage(app.getStage())
+                .appliedAt(app.getAppliedAt())
+                .updatedAt(app.getUpdatedAt())
+                .cvFileName(app.getCvFile() != null ? app.getCvFile().getFileName() : null)
+                .cvFileUrl(app.getCvFile() != null ? app.getCvFile().getFilePath() : null)
                 .build();
     }
 }
