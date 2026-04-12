@@ -1,8 +1,9 @@
 package com.smarthire.backend.features.application.controller;
 
-import com.smarthire.backend.features.application.dto.ApplyRequest;
+import com.smarthire.backend.features.application.dto.ApplyJobRequest;
 import com.smarthire.backend.features.application.dto.ApplicationResponse;
 import com.smarthire.backend.features.application.dto.ChangeStageRequest;
+import com.smarthire.backend.features.application.dto.ApplicationTrackingResponse;
 import com.smarthire.backend.features.application.service.ApplicationService;
 import com.smarthire.backend.shared.constants.ApiPaths;
 import com.smarthire.backend.shared.dto.ApiResponse;
@@ -23,9 +24,9 @@ public class ApplicationController {
 
     // ── Candidate: apply to a job ──
 
-    @PostMapping
+    @PostMapping("/apply")
     public ResponseEntity<ApiResponse<ApplicationResponse>> apply(
-            @Valid @RequestBody ApplyRequest request) {
+            @Valid @RequestBody ApplyJobRequest request) {
         ApplicationResponse response = applicationService.apply(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Application submitted successfully", response));
@@ -34,8 +35,8 @@ public class ApplicationController {
     // ── Candidate: list my applications ──
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> getMyApplications() {
-        List<ApplicationResponse> responses = applicationService.getMyApplications();
+    public ResponseEntity<ApiResponse<List<ApplicationTrackingResponse>>> getMyApplications() {
+        List<ApplicationTrackingResponse> responses = applicationService.getMyApplications();
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 

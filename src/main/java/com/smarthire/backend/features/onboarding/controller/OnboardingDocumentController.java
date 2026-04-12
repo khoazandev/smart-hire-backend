@@ -5,6 +5,7 @@ import com.smarthire.backend.features.onboarding.dto.OnboardingDocumentResponse;
 import com.smarthire.backend.features.onboarding.enums.DocumentType;
 import com.smarthire.backend.features.onboarding.enums.VerificationStatus;
 import com.smarthire.backend.features.onboarding.service.OnboardingDocumentService;
+import com.smarthire.backend.shared.constants.ApiPaths;
 import com.smarthire.backend.shared.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -24,7 +25,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/onboarding-documents")
+@RequestMapping(ApiPaths.BASE + "/onboarding-documents")
 @RequiredArgsConstructor
 @Tag(name = "Onboarding Documents", description = "Quản lý hồ sơ trúng tuyển và kiểm duyệt bằng AI")
 @SecurityRequirement(name = "bearerAuth")

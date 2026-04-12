@@ -5,6 +5,7 @@ import com.smarthire.backend.core.security.CustomAuthenticationEntryPoint;
 import com.smarthire.backend.core.security.JwtAuthenticationFilter;
 import com.smarthire.backend.shared.constants.ApiPaths;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -37,7 +38,7 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:3000}")
+    @Value("${app.frontend.url:http://localhost:3000}")
     private String frontendUrl;
 
     @Bean
@@ -57,7 +58,9 @@ public class SecurityConfig {
                                 ApiPaths.AUTH + "/login",
                                 ApiPaths.AUTH + "/refresh-token",
                                 ApiPaths.AUTH + "/forgot-password",
-                                ApiPaths.AUTH + "/reset-password")
+                                ApiPaths.AUTH + "/reset-password",
+                                ApiPaths.AUTH + "/github/callback",
+                                "/api/auth/github/callback")
                         .permitAll()
 
                         // ── Public browsable content (no login required) ──
@@ -87,7 +90,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, ApiPaths.JOBS + "/**").hasAnyRole("HR", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, ApiPaths.JOBS + "/**").hasAnyRole("HR", "ADMIN")
                         .requestMatchers(ApiPaths.COMPANIES + "/**").hasAnyRole("HR", "ADMIN")
-                        .requestMatchers(ApiPaths.DASHBOARD + "/**").hasAnyRole("HR", "ADMIN")
+                        // ── Dashboards endpoints ──
+                        .requestMatchers(ApiPaths.DASHBOARD + "/candidate/**").hasAnyRole("CANDIDATE", "ADMIN")
+                        .requestMatchers(ApiPaths.DASHBOARD + "/hr/**").hasAnyRole("HR", "ADMIN")
+                        .requestMatchers(ApiPaths.DASHBOARD + "/**").hasAnyRole("HR", "ADMIN", "CANDIDATE")
 
                         // ── Everything else requires authentication ──
                         .anyRequest().authenticated())
